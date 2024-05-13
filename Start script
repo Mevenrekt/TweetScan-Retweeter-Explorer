@@ -1,0 +1,50 @@
+const retweetedAccounts = new Set(); // Set to store retweeted accounts and their URLs
+let scrollInterval; // Variable to store the interval ID
+
+function extractAndDisplayRetweetedAccounts() {
+    document.querySelectorAll('article').forEach(tweet => {
+        const retweetInfo = tweet.querySelector('div[data-testid="retweet"]');
+        if (retweetInfo) {
+            // Extract the element containing the link to the profile
+            const profileLinkElement = tweet.querySelector('a[href^="/"]:not([href*="/photo"])');
+            const accountNameElement = tweet.querySelector('a > div > div > span');
+            if (profileLinkElement && accountNameElement) {
+                // Build the complete profile URL
+                const url = 'https://twitter.com' + profileLinkElement.getAttribute('href');
+                const accountName = accountNameElement.innerText;
+                const accountInfo = `${accountName} - ${url}`;
+                retweetedAccounts.add(accountInfo);
+            }
+        }
+    });
+    console.log('Retweeted accounts so far:', Array.from(retweetedAccounts));
+}
+
+function autoScroll() {
+    let lastHeight = document.body.scrollHeight;
+
+    scrollInterval = setInterval(() => {
+        extractAndDisplayRetweetedAccounts(); // Extract and display retweeted accounts before each new loading
+        window.scrollTo(0, document.body.scrollHeight); // Scroll the page to the bottom
+
+        setTimeout(() => {
+            const newHeight = document.body.scrollHeight;
+            if (newHeight === lastHeight) {
+                clearInterval(scrollInterval); // Stop scrolling if no new tweets are loaded
+                console.log('Scrolling completed. Final list of retweeted accounts:', Array.from(retweetedAccounts));
+            } else {
+                lastHeight = newHeight; // Update the height for the next cycle
+            }
+        }, 1000); // Wait 1 second for the new tweets to load
+    }, 2000); // Interval of 2000 ms between scrolling attempts
+}
+
+function stopScrolling() {
+    clearInterval(scrollInterval);
+    console.log('Scrolling stopped by user.');
+}
+
+// Start the process
+autoScroll();
+
+// To stop the script, you can call stopScrolling() in the console.

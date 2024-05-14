@@ -1,50 +1,49 @@
-const retweetedAccounts = new Set(); // Set to store retweeted accounts and their URLs
-let scrollInterval; // Variable to store the interval ID
+const retweetedAccounts = new Set(); // Ensemble pour stocker les comptes retweetés et leurs URLs
+let scrollInterval; // Variable pour stocker l'identifiant de l'intervalle
 
 function extractAndDisplayRetweetedAccounts() {
     document.querySelectorAll('article').forEach(tweet => {
-        const retweetInfo = tweet.querySelector('div[data-testid="retweet"]');
+        // Vérifier si le tweet contient des informations de retweet
+        const retweetInfo = tweet.querySelector('[data-testid="retweet"]');
         if (retweetInfo) {
-            // Extract the element containing the link to the profile
-            const profileLinkElement = tweet.querySelector('a[href^="/"]:not([href*="/photo"])');
-            const accountNameElement = tweet.querySelector('a > div > div > span');
+            // Extraire l'élément contenant le lien vers le profil
+            const profileLinkElement = tweet.querySelector('a[href^="/"]:not([dir="auto"])'); // Ajusté pour exclure les liens non profil
+            const accountNameElement = tweet.querySelector('a div[dir="ltr"] > span'); // Ajusté pour capturer précisément le nom du compte
             if (profileLinkElement && accountNameElement) {
-                // Build the complete profile URL
+                // Construire l'URL complète du profil
                 const url = 'https://twitter.com' + profileLinkElement.getAttribute('href');
-                const accountName = accountNameElement.innerText;
+                const accountName = accountNameElement.textContent;
                 const accountInfo = `${accountName} - ${url}`;
                 retweetedAccounts.add(accountInfo);
             }
         }
     });
-    console.log('Retweeted accounts so far:', Array.from(retweetedAccounts));
+    console.log('Comptes retweetés jusqu\'à présent:', Array.from(retweetedAccounts));
 }
 
 function autoScroll() {
     let lastHeight = document.body.scrollHeight;
 
     scrollInterval = setInterval(() => {
-        extractAndDisplayRetweetedAccounts(); // Extract and display retweeted accounts before each new loading
-        window.scrollTo(0, document.body.scrollHeight); // Scroll the page to the bottom
+        extractAndDisplayRetweetedAccounts(); // Extraire et afficher les comptes retweetés avant chaque nouveau chargement
+        window.scrollTo(0, document.body.scrollHeight); // Faire défiler la page vers le bas
 
         setTimeout(() => {
             const newHeight = document.body.scrollHeight;
             if (newHeight === lastHeight) {
-                clearInterval(scrollInterval); // Stop scrolling if no new tweets are loaded
-                console.log('Scrolling completed. Final list of retweeted accounts:', Array.from(retweetedAccounts));
+                clearInterval(scrollInterval); // Arrêter le défilement si aucun nouveau tweet n'est chargé
+                console.log('Défilement terminé. Liste finale des comptes retweetés:', Array.from(retweetedAccounts));
             } else {
-                lastHeight = newHeight; // Update the height for the next cycle
+                lastHeight = newHeight; // Mettre à jour la hauteur pour le prochain cycle
             }
-        }, 1000); // Wait 1 second for the new tweets to load
-    }, 2000); // Interval of 2000 ms between scrolling attempts
+        }, 1000); // Attendre 1 seconde pour le chargement des nouveaux tweets
+    }, 2000); // Interval de 2000 ms entre les tentatives de défilement
 }
 
 function stopScrolling() {
     clearInterval(scrollInterval);
-    console.log('Scrolling stopped by user.');
+    console.log('Défilement stoppé par l\'utilisateur.');
 }
 
-// Start the process
+// Lancer le processus
 autoScroll();
-
-// To stop the script, you can call stopScrolling() in the console.
